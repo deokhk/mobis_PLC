@@ -73,8 +73,7 @@ def main(args):
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
-        torch_dtype=torch.bfloat16, 
-        device_map="auto"
+        torch_dtype=torch.float16, 
     )
     
     
