@@ -73,7 +73,7 @@ def main(args):
     device_string = PartialState().process_index
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
-        torch_dtype=torch.bfloat16,
+        torch_dtype=torch.bfloat16, 
         device_map={'':device_string},
     )
     

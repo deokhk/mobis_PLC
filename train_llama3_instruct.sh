@@ -12,7 +12,7 @@ PER_DEVICE_EVAL_BATCH_SIZE=1
 NUM_EPOCHS=15
 WANDB_RUN_NAME=mobis_llama3_instruct
 
-python train.py \
+torchrun --nproc_per_node=$NUM_GPUS --nnodes 1 --rdzv_backend c10d --rdzv_endpoint localhost:0 train.py \
 --output_dir $OUTPUT_DIR \
 --model_id $MODEL_ID \
 --train_data $TRAIN_DATA \
