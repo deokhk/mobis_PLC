@@ -75,7 +75,7 @@ def main(args):
     
     
     ## Trainer 로드
-    tokenizer.padding_side = "left"
+    #tokenizer.padding_side = "left"
     model.config.use_cache = False
     trainer = SFTTrainer(
         model=model,
