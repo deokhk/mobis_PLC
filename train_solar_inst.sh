@@ -6,13 +6,13 @@ TRAIN_DATA=./data/train.json
 EVAL_DATA=./data/valid.json
 MODEL_ID=upstage/SOLAR-10.7B-Instruct-v1.0 
 BATCH_SIZE=8
-NUM_GPUS=4
+NUM_GPUS=2
 PER_DEVICE_TRAIN_BATCH_SIZE=1
 PER_DEVICE_EVAL_BATCH_SIZE=1
 NUM_EPOCHS=15
 WANDB_RUN_NAME=mobis_solar_inst
 
-python train.py \
+torchrun --nproc_per_node=$NUM_GPUS --nnodes 1 --rdzv_backend c10d --rdzv_endpoint localhost:0 train.py \
 --output_dir $OUTPUT_DIR \
 --model_id $MODEL_ID \
 --train_data $TRAIN_DATA \

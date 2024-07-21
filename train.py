@@ -25,15 +25,15 @@ def main(args):
     num_gpus = torch.cuda.device_count()
     grad_accum_steps = args.batch_size // args.per_device_train_batch_size // num_gpus
 		
-		## LoRA
-    # lora_r = args.lora_r
-    # peft_config = LoraConfig(
-    #     lora_alpha=lora_r*2,
-    #     lora_dropout=0.05,
-    #     r=lora_r,
-    #     bias="none",
-    #     task_type="CAUSAL_LM"
-    # )
+		# LoRA
+    lora_r = args.lora_r
+    peft_config = LoraConfig(
+        lora_alpha=lora_r*2,
+        lora_dropout=0.05,
+        r=lora_r,
+        bias="none",
+        task_type="CAUSAL_LM"
+    )
 		
 		
 		## 학습 파라미터
@@ -61,35 +61,35 @@ def main(args):
         run_name=args.wandb_run_name,
         report_to="wandb",
         save_only_model=True,
+        ddp_find_unused_parameters=False
     )
 		
 		
 		## 모델 로드
     tokenizer = AutoTokenizer.from_pretrained(args.model_id, use_fast=False)
-    tokenizer.padding_side = "left"
+    tokenizer.padding_side = "right" # For 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    device_string = PartialState().process_index
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
         torch_dtype=torch.bfloat16, 
-        attn_implementation="flash_attention_2",
-        device_map={'':device_string},
+        device_map="auto"
     )
     
     
     ## Trainer 로드
     #tokenizer.padding_side = "left"
     model.config.use_cache = False
+    max_seq_len=8192 if "llama" in args.model_id else 4096
     trainer = SFTTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         tokenizer=tokenizer,
-        # peft_config=peft_config,
-        max_seq_length=4096,
+        peft_config=peft_config,
+        max_seq_length=max_seq_len,
         callbacks = [EarlyStoppingCallback(early_stopping_patience=1)],
     )
 		
@@ -117,6 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("--warmup_ratio", type=float, default=0.0, help="Linear warmup over warmup_ratio fraction of total steps")
     parser.add_argument("--wandb_run_name", type=str, default=None, help="Name of the W&B run")
     parser.add_argument("--model_id", type=str, required=True, help="Model identifier to load from huggingface.co/models")
+    parser.add_argument("--lora_r", type=int, default=16, help="LoRA r value")
 
     args = parser.parse_args()
 
