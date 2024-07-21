@@ -70,10 +70,11 @@ def main(args):
     tokenizer.padding_side = "right" # For 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-
+    
+    td_type=torch.bfloat16 if "llama" in args.model_id else torch.float16 
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
-        torch_dtype=torch.float16, 
+        torch_dtype=td_type,
     )
     
     
