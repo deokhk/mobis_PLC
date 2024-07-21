@@ -3,3 +3,5 @@ datasets
 accelerate
 peft
 trl
+ninja
+wandb

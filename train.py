@@ -22,6 +22,8 @@ def main(args):
     train_dataset = load_dataset("json", data_files=args.train_data, split="train")
     eval_dataset = load_dataset("json", data_files=args.eval_data, split="train")
 		
+    num_gpus = torch.cuda.device_count()
+    grad_accum_steps = args.batch_size // args.per_device_train_batch_size // num_gpus
 		
 		## LoRA
     # lora_r = args.lora_r
@@ -42,7 +44,7 @@ def main(args):
         bf16=True,
         per_device_train_batch_size=args.per_device_train_batch_size,
         per_device_eval_batch_size=args.per_device_eval_batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        gradient_accumulation_steps=grad_accum_steps,
         learning_rate=args.learning_rate,
         lr_scheduler_type=args.lr_scheduler_type,
         weight_decay=args.weight_decay,
@@ -68,7 +70,6 @@ def main(args):
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
         torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
         device_map={'':device_string},
     )
     
@@ -94,21 +95,20 @@ def main(args):
     wandb.finish()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train a model with SFTTrainer")
 
     parser.add_argument("--seed", type=int, default=42, help="Random seed for initialization")
     parser.add_argument("--output_dir", type=str, required=True, help="The output directory where the model predictions and checkpoints will be written")
     parser.add_argument("--train_data", type=str, required=True, help="Path to the training data file")
     parser.add_argument("--eval_data", type=str, required=True, help="Path to the evaluation data file")
-    parser.add_argument("--per_device_train_batch_size", type=int, default=8, help="Batch size per device during training")
-    parser.add_argument("--per_device_eval_batch_size", type=int, default=8, help="Batch size per device during evaluation")
-    parser.add_argument("--gradient_accumulation_steps", type=int, default=1, help="Number of updates steps to accumulate before performing a backward/update pass")
+    
+    parser.add_argument("--batch_size", type=int, default=8, help="Batch size (including gradient accumulation, multi-gpu training)")
+    parser.add_argument("--per_device_train_batch_size", type=int, default=1, help="Batch size per device during training")
+    parser.add_argument("--per_device_eval_batch_size", type=int, default=1, help="Batch size per device during evaluation")
     parser.add_argument("--learning_rate", type=float, default=5e-5, help="The initial learning rate for Adam")
     parser.add_argument("--lr_scheduler_type", type=str, default="linear", help="The scheduler type to use", choices=["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"])
     parser.add_argument("--weight_decay", type=float, default=0.0, help="Weight decay if we apply some")
-    parser.add_argument("--num_train_epochs", type=int, default=3, help="Total number of training epochs to perform")
+    parser.add_argument("--num_train_epochs", type=int, default=20, help="Total number of training epochs to perform")
     parser.add_argument("--warmup_ratio", type=float, default=0.0, help="Linear warmup over warmup_ratio fraction of total steps")
     parser.add_argument("--wandb_run_name", type=str, default=None, help="Name of the W&B run")
     parser.add_argument("--model_id", type=str, required=True, help="Model identifier to load from huggingface.co/models")
