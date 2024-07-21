@@ -66,6 +66,10 @@ def main(args):
 		
 		## 모델 로드
     tokenizer = AutoTokenizer.from_pretrained(args.model_id, use_fast=False)
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
     device_string = PartialState().process_index
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
