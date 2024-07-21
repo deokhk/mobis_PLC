@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -J llama3_inst  # job name
+#SBATCH -J llama3_inst_kor  # job name
 #SBATCH -o sbatch_output_log/output_%x_%j.out # standard output and error log
 #SBATCH -p RTX6000ADA  # queue name or partiton name
 #SBATCH -t 72:00:00 # Run time (hh:mm:ss)
@@ -16,6 +16,6 @@ module purge
 ml load ohpc
 
 date
-bash /home1/deokhk_1/project/mobis_PLC/train_llama3_instruct.sh
+bash /home1/deokhk_1/project/mobis_PLC/train_llama3_inst_korean.sh
 
 date
